@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/ilia-tolliu/terraform-provider-pgmulti/internal/provider"
@@ -20,5 +21,9 @@ func main() {
 		Debug:           debug,
 	}
 
-	providerserver.Serve(context.Background(), provider.NewPgmulti, opts)
+	err := providerserver.Serve(context.Background(), provider.NewPgmulti, opts)
+
+	if err != nil {
+		log.Fatalf("failed to run the provider: %s", err.Error())
+	}
 }
