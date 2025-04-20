@@ -38,47 +38,47 @@ func (r *ResourceDb) Metadata(ctx context.Context, req resource.MetadataRequest,
 func (r *ResourceDb) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
-		Description: "Database resource, one of possibly many on an RDS database instance.",
+		Description: "Database resource, one of possibly many on a PostgreSQL server instance.",
 
 		Attributes: map[string]schema.Attribute{
 			"hostname": schema.StringAttribute{
-				Description: "RDS instance hostname",
+				Description: "PostgreSQL server instance hostname.",
 				Required:    true,
 			},
 			"port": schema.Int32Attribute{
-				Description: "RDS instance port",
+				Description: "PostgreSQL server instance port.",
 				Required:    true,
 			},
 			"master_username": schema.StringAttribute{
-				Description: "RDS instance master username",
+				Description: "PostgreSQL server instance master username.",
 				Required:    true,
 			},
 			"master_password": schema.StringAttribute{
-				Description: "RDS instance master password",
+				Description: "PostgreSQL server instance master password.",
 				Required:    true,
 			},
 			"db_name": schema.StringAttribute{
-				Description: "Database name to create",
+				Description: "Database name to create.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"db_username": schema.StringAttribute{
-				Description: "Generated database owner username",
+				Description: "Generated database owner username.",
 				Required:    false,
 				Optional:    false,
 				Computed:    true,
 			},
 			"db_password": schema.StringAttribute{
-				Description: "Generated database owner password",
+				Description: "Generated database owner password.",
 				Required:    false,
 				Optional:    false,
 				Computed:    true,
 				Sensitive:   true,
 			},
 			"id": schema.Int32Attribute{
-				Description: "Database OID in pg_catalog.pg_database",
+				Description: "Generated database OID in pg_catalog.pg_database.",
 				Required:    false,
 				Optional:    false,
 				Computed:    true,
