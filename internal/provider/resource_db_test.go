@@ -54,7 +54,7 @@ func TestAccPgmultiDb(t *testing.T) {
 			"pgmulti": providerserver.NewProtocol6WithError(NewPgmulti()),
 		},
 		ExternalProviders: map[string]resource.ExternalProvider{
-			"docker": resource.ExternalProvider{
+			"docker": {
 				Source: "kreuzwerker/docker",
 			},
 		},
@@ -92,12 +92,12 @@ resource "pgmulti_db" "test_db" {
 	})
 }
 
-var dbModel db
+var dbAttrs dbAttributes = dbAttributes{}
 var _ statecheck.StateCheck = checkDbResourceExists{}
 var _ statecheck.StateCheck = checkDbExistence{}
 var _ statecheck.StateCheck = checkDbInteraction{}
 
-type db struct {
+type dbAttributes struct {
 	hostname       string
 	port           string
 	masterUsername string
@@ -138,15 +138,15 @@ func (s checkDbResourceExists) CheckState(ctx context.Context, req statecheck.Ch
 		return
 	}
 
-	dbModel = db{
-		hostname:       resource.AttributeValues["hostname"].(string),
-		port:           resource.AttributeValues["port"].(json.Number).String(),
-		masterUsername: resource.AttributeValues["master_username"].(string),
-		masterPassword: resource.AttributeValues["master_password"].(string),
-		dbName:         resource.AttributeValues["db_name"].(string),
-		dbUsername:     resource.AttributeValues["db_username"].(string),
-		dbPassword:     resource.AttributeValues["db_password"].(string),
-	}
+	dbAttrs.hostname, _ = resource.AttributeValues["hostname"].(string)
+	port, _ := resource.AttributeValues["port"].(json.Number)
+	dbAttrs.port = port.String()
+	dbAttrs.masterUsername, _ = resource.AttributeValues["master_username"].(string)
+	dbAttrs.masterPassword, _ = resource.AttributeValues["master_password"].(string)
+	dbAttrs.dbName, _ = resource.AttributeValues["db_name"].(string)
+	dbAttrs.dbUsername, _ = resource.AttributeValues["db_username"].(string)
+	dbAttrs.dbPassword, _ = resource.AttributeValues["db_password"].(string)
+
 }
 
 type checkDbExistence struct {
@@ -155,10 +155,10 @@ type checkDbExistence struct {
 
 func (s checkDbExistence) CheckState(ctx context.Context, req statecheck.CheckStateRequest, resp *statecheck.CheckStateResponse) {
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
-		dbModel.masterUsername,
-		dbModel.masterPassword,
-		dbModel.hostname,
-		dbModel.port,
+		dbAttrs.masterUsername,
+		dbAttrs.masterPassword,
+		dbAttrs.hostname,
+		dbAttrs.port,
 		"postgres",
 	)
 
@@ -169,11 +169,11 @@ func (s checkDbExistence) CheckState(ctx context.Context, req statecheck.CheckSt
 		return
 	}
 
-	oid, err := getDbOid(ctx, conn, dbModel.dbName)
+	oid, err := getDbOid(ctx, conn, dbAttrs.dbName)
 	if !s.shouldExist && errors.Is(err, pgx.ErrNoRows) {
 		return
 	} else if s.shouldExist && errors.Is(err, pgx.ErrNoRows) {
-		resp.Error = fmt.Errorf("Database %s doesn't exist when it should", dbModel.dbName)
+		resp.Error = fmt.Errorf("Database %s doesn't exist when it should", dbAttrs.dbName)
 
 		return
 	} else if err != nil {
@@ -183,7 +183,7 @@ func (s checkDbExistence) CheckState(ctx context.Context, req statecheck.CheckSt
 	}
 
 	if !s.shouldExist && oid > 0 {
-		resp.Error = fmt.Errorf("Database %s exist when it shouldn't", dbModel.dbName)
+		resp.Error = fmt.Errorf("Database %s exist when it shouldn't", dbAttrs.dbName)
 
 		return
 	}
@@ -193,11 +193,11 @@ type checkDbInteraction struct{}
 
 func (s checkDbInteraction) CheckState(ctx context.Context, req statecheck.CheckStateRequest, resp *statecheck.CheckStateResponse) {
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
-		dbModel.dbUsername,
-		dbModel.dbPassword,
-		dbModel.hostname,
-		dbModel.port,
-		dbModel.dbName,
+		dbAttrs.dbUsername,
+		dbAttrs.dbPassword,
+		dbAttrs.hostname,
+		dbAttrs.port,
+		dbAttrs.dbName,
 	)
 
 	conn, err := connectDb(ctx, connStr)

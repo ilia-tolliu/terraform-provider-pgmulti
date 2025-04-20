@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -105,7 +106,7 @@ func (r *ResourceDb) Create(ctx context.Context, req resource.CreateRequest, res
 		resp.Diagnostics.AddError("Db Create Error", fmt.Sprintf("failed to connect to PostgreSQL server at %s: %s", dbUrl, err))
 		return
 	}
-	defer conn.Close(ctx)
+	defer closeConn(ctx, conn, resp.Diagnostics)
 
 	username, password, err := createUser(ctx, conn)
 	if err != nil {
@@ -147,7 +148,7 @@ func (r *ResourceDb) Read(ctx context.Context, req resource.ReadRequest, resp *r
 		resp.Diagnostics.AddError("Db Read Error", fmt.Sprintf("failed to connect to RDS instance: %s", err))
 		return
 	}
-	defer conn.Close(ctx)
+	defer closeConn(ctx, conn, resp.Diagnostics)
 
 	dbOid, err := getDbOid(ctx, conn, data.DbName.ValueString())
 	if err != nil {
@@ -178,7 +179,7 @@ func (r *ResourceDb) Delete(ctx context.Context, req resource.DeleteRequest, res
 		resp.Diagnostics.AddError("Db Delete Error", fmt.Sprintf("failed to connect to RDS instance: %s", err))
 		return
 	}
-	defer conn.Close(ctx)
+	defer closeConn(ctx, conn, resp.Diagnostics)
 
 	err = dropDb(ctx, conn, data.DbName.ValueString())
 	if err != nil {
@@ -270,4 +271,11 @@ func getDbOid(ctx context.Context, conn *pgx.Conn, dbName string) (int32, error)
 	}
 
 	return dbOid, nil
+}
+
+func closeConn(ctx context.Context, conn *pgx.Conn, d diag.Diagnostics) {
+	err := conn.Close(ctx)
+	if err != nil {
+		d.AddError("Db Error", fmt.Sprintf("failed to close connection to the DB: %s", err))
+	}
 }
