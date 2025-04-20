@@ -205,7 +205,7 @@ func (s checkDbInteraction) CheckState(ctx context.Context, req statecheck.Check
 		return
 	}
 
-	err = createTable(ctx, conn, dbModel.dbName, "test_table")
+	err = createTable(ctx, conn, "test_table")
 	if err != nil {
 		resp.Error = fmt.Errorf("Failed to create table: %s", err)
 

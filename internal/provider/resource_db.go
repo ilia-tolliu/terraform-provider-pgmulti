@@ -237,12 +237,12 @@ func createDb(ctx context.Context, conn *pgx.Conn, dbName string, username strin
 	return err
 }
 
-func createTable(ctx context.Context, conn *pgx.Conn, dbName string, tableName string) error {
+func createTable(ctx context.Context, conn *pgx.Conn, tableName string) error {
 	sql := fmt.Sprintf(`
-		CREATE TABLE test_table (
+		CREATE TABLE %s (
     		id int8 PRIMARY KEY
      	)
-	`)
+	`, tableName)
 	_, err := conn.Exec(ctx, sql)
 
 	return err
