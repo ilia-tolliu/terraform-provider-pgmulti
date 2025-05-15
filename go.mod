@@ -3,7 +3,7 @@ module github.com/ilia-tolliu/terraform-provider-pgmulti
 go 1.24.0
 
 require (
-	github.com/hashicorp/terraform-json v0.24.0
+	github.com/hashicorp/terraform-json v0.25.0
 	github.com/hashicorp/terraform-plugin-framework v1.14.1
 	github.com/hashicorp/terraform-plugin-go v0.26.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
